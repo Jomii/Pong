@@ -1,15 +1,13 @@
 public class AI {
     int HEIGHT;
     int WIDTH;
-    int y;
     int ballX;
     int ballY;
     int vision;
 
-    public AI(int height, int width, int y) {
+    public AI(int height, int width) {
         this.HEIGHT = height;
         this.WIDTH = width;
-        this.y = y;
         this.vision = width / 2;
     }
 
@@ -18,22 +16,22 @@ public class AI {
         this.ballY = y;
     }
 
-    public void move() {
+    /* TODO: Fix jitter when moving the paddle.
+            - Fix ai going beyond bottom border. */
+    public int movePaddle(int y) {
         if (ballX >= vision) {
 
-            if (ballY >= y + 5) {
-                if(y + 25 + 3 >= this.HEIGHT) {
-                    y = this.HEIGHT - 25;
+            if (ballY >= y + 25 + 3) {
+                if (y + 50 + 3 > this.HEIGHT) {
+
                 } else {
-                y += 3;
-            }
-            } else if (ballY <= y - 5) {
-                if (y - 3 <= 25) {
-                    y = 25;
-                } else {
-                    y -= 3;
+                    return 3;
                 }
+            } else if (ballY <= y + 25 - 3) {
+                return -3;
             }
         }
+
+        return 0;
     }
 }

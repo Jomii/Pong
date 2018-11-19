@@ -1,9 +1,19 @@
 import InputHandler;
+import Paddle;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
+
+/* TODO:
+    - Fix AI going out of bounds.
+    - Fix AI stuttering movement at slow speeds.
+    - Fix pausing and unpausing.
+    - Extract the ball to its own class.
+    - Add a main menu.
+    - Add sound. 
+*/
 
 @SuppressWarnings("serial")
 public class Pong extends JFrame {
@@ -12,12 +22,10 @@ public class Pong extends JFrame {
     final int fps = 60;
     boolean isRunning = false;
     boolean paused = false;
-    int x = 10;
-    int y = HEIGHT / 2 - 25;
+    Paddle p1;
+    Paddle p2;
     int score1 = 0;
     int score2 = 0;
-    int x2 = WIDTH - 20;
-    int y2 = HEIGHT / 2 - 25;
 
     int ballX = WIDTH / 2;
     int ballY = HEIGHT / 2;
@@ -73,12 +81,14 @@ public class Pong extends JFrame {
         this.insets = getInsets();
         setSize(this.insets.left + this.WIDTH + this.insets.right, this.insets.top + this.HEIGHT + this.insets.bottom);
         this.input = new InputHandler(this);
-        this.ai = new AI(this.WIDTH, this.HEIGHT, y2);
+        this.p1 = new Paddle(10, HEIGHT / 2 - 25, HEIGHT);
+        this.p2 = new Paddle(WIDTH - 20, HEIGHT / 2 - 25, HEIGHT);
+        this.ai = new AI(this.WIDTH, this.HEIGHT);
     }
 
     /* Check for input, move things and check for win conditions. */
     void update() {
-        /* Keep listening to p key even if paused to unpause. */
+        /* Keep listening to p key to unpause. */
         if (this.input.isKeyDown(KeyEvent.VK_P)) {
             if (paused) {
                 paused = false;
@@ -90,42 +100,32 @@ public class Pong extends JFrame {
         if (!paused) {  
                 moveBall();
                 ai.setBallLocation(this.ballX, this.ballY);
-                ai.move();
-                this.y2 = ai.y;
+                p2.move(ai.movePaddle(p2.getY()));
                 
-                if (this.input.isKeyDown(KeyEvent.VK_W)) {
-                    if (y - 5 <= 0) {
-                        y = 0;
-                } else {
-                    y -= 5;
-                }
+            if (this.input.isKeyDown(KeyEvent.VK_W)) {
+                p1.move(-5);
             }
             
             if (this.input.isKeyDown(KeyEvent.VK_S)) {
-                if(y + 50 + 5 >= this.HEIGHT) {
-                    y = this.HEIGHT - 50;
+                // *Refactor this
+                if (p1.getY() + 50 >= this.HEIGHT) {
                 } else {
-                    y += 5;
+                    p1.move(5);
                 }
             }
             
             if (this.input.isKeyDown(KeyEvent.VK_UP)) {
-                if (y2 - 5 <= 0) {
-                    y2 = 0;
-                } else {
-                    y2 -= 5;
-                }
+                p2.move(-5);
             }
             
             if (this.input.isKeyDown(KeyEvent.VK_DOWN)) {
-                if(y2 + 50 + 5 >= this.HEIGHT) {
-                    y2 = this.HEIGHT - 50;
+                // *Refactor this
+                if(p2.getY() + 50 >= this.HEIGHT) {
+
                 } else {
-                    y2 += 5;
+                    p2.move(5);
                 }
             }
-
-            
             
             if (ballX < 0 || ballX > this.WIDTH) {
                 if (ballX < 0) {
@@ -161,8 +161,8 @@ public class Pong extends JFrame {
         bbg.drawString(Integer.toString(score2), this.WIDTH / 2 + 40, 30);
 
         /* Draw paddles and ball. */
-        bbg.fillRect(x, y, 10, 50);
-        bbg.fillRect(x2, y2-25, 10, 50); // y2-25 so ai can calculate from center of paddle.
+        p1.draw(bbg);
+        p2.draw(bbg);
         bbg.fillOval(ballX, ballY, 10, 10);
 
         g.drawImage(backBuffer, this.insets.left, this.insets.top, this);
@@ -170,17 +170,17 @@ public class Pong extends JFrame {
 
     void moveBall() {
         /* Calculate the y axis difference of paddle 1 (y) and ball. */
-        int difference = Math.abs((ballY + 5) - (y + 25));
+        int difference = Math.abs((ballY + 5) - (p1.getY() + 25));
         
         /* Change direction of ball if hitting the paddle. */
-        if (ballX == x + 5 && difference <= 25) {
+        if (ballX == p1.getX() + 5 && difference <= 25) {
             this.toLeft = false;
             /* Adjust the vertical speed of the ball. Formula is difference / 5
                 So when hitting the top half of paddle, the ball starts moving up. */
-            speed = ((ballY + 5) - (y + 25)) / 5;
-        } else if (ballX == x2 - 5 && (Math.abs((ballY + 5) - (y2 + 25)) <= 25)){
+            speed = ((ballY + 5) - (p1.getY() + 25)) / 5;
+        } else if (ballX == p2.getX() - 5 && (Math.abs((ballY + 5) - (p2.getY() + 25)) <= 25)){
             this.toLeft = true;
-            speed = ((ballY + 5) - (y2 + 25)) / 5;
+            speed = ((ballY + 5) - (p2.getY() + 25)) / 5;
         }
 
         if (this.toLeft) {
