@@ -1,5 +1,3 @@
-import InputHandler;
-import Paddle;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -7,9 +5,6 @@ import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
 /* TODO:
-    - Fix AI going out of bounds.
-    - Fix AI stuttering movement at slow speeds.
-    - Fix pausing and unpausing.
     - Extract the ball to its own class.
     - Add a main menu.
     - Add sound. 
@@ -34,7 +29,10 @@ public class Pong extends JFrame {
 
     /* Image drawn from this buffer to prevent flickering. */
     BufferedImage backBuffer = new BufferedImage(this.WIDTH, this.HEIGHT, BufferedImage.TYPE_INT_RGB);
-    /* Insets so that the canvas is being sized correctly and doesnt include e.g. titlebar. */
+    /*
+     * Insets so that the canvas is being sized correctly and doesnt include e.g.
+     * titlebar.
+     */
     Insets insets;
     InputHandler input;
     AI ai;
@@ -49,10 +47,11 @@ public class Pong extends JFrame {
     public void run() {
         initialize();
 
-        while(isRunning) {
+        while (isRunning) {
+
             long time = System.currentTimeMillis();
 
-            update();            
+            update();
             draw();
 
             time = (1000 / this.fps) - (System.currentTimeMillis() - time);
@@ -60,8 +59,8 @@ public class Pong extends JFrame {
             if (time > 0) {
                 try {
                     Thread.sleep(time);
-                } catch (Exception e) {}
-
+                } catch (Exception e) {
+                }
             }
 
         }
@@ -88,24 +87,24 @@ public class Pong extends JFrame {
 
     /* Check for input, move things and check for win conditions. */
     void update() {
-        /* Keep listening to p key to unpause. */
         if (this.input.isKeyDown(KeyEvent.VK_P)) {
-            if (paused) {
-                paused = false;
-            } else {
-                paused = true;
+            paused = !paused;
+            /* Set a delay so the game is not instantly unpaused. */
+            try {
+                Thread.sleep(200);
+            } catch (Exception e) {
             }
         }
         /* Only update gamestate if game not paused. */
-        if (!paused) {  
-                moveBall();
-                ai.setBallLocation(this.ballX, this.ballY);
-                p2.move(ai.movePaddle(p2.getY()));
-                
+        if (!paused) {
+            moveBall();
+            ai.setBallLocation(this.ballX, this.ballY);
+            p2.move(ai.movePaddle(p2.getY()));
+
             if (this.input.isKeyDown(KeyEvent.VK_W)) {
                 p1.move(-5);
             }
-            
+
             if (this.input.isKeyDown(KeyEvent.VK_S)) {
                 // *Refactor this
                 if (p1.getY() + 50 >= this.HEIGHT) {
@@ -113,37 +112,39 @@ public class Pong extends JFrame {
                     p1.move(5);
                 }
             }
-            
+
             if (this.input.isKeyDown(KeyEvent.VK_UP)) {
                 p2.move(-5);
             }
-            
+
             if (this.input.isKeyDown(KeyEvent.VK_DOWN)) {
                 // *Refactor this
-                if(p2.getY() + 50 >= this.HEIGHT) {
+                if (p2.getY() + 50 >= this.HEIGHT) {
 
                 } else {
                     p2.move(5);
                 }
             }
-            
+
             if (ballX < 0 || ballX > this.WIDTH) {
                 if (ballX < 0) {
                     score2++;
                 } else {
                     score1++;
                 }
-                
+
                 /* Reset the location of ball. */
                 ballX = this.WIDTH / 2;
                 ballY = this.HEIGHT / 2;
                 speed = 0;
 
             }
+
         }
-        
+
+
     }
-    
+
     /* Draws everything. */
     void draw() {
         Graphics g = getGraphics();
@@ -156,9 +157,13 @@ public class Pong extends JFrame {
 
         bbg.setColor(Color.WHITE);
         /* Draw score. */
-        bbg.drawString("SCORE", this.WIDTH / 2 - 10, 15);
-        bbg.drawString(Integer.toString(score1), this.WIDTH / 2 - 20, 30);
-        bbg.drawString(Integer.toString(score2), this.WIDTH / 2 + 40, 30);
+        if (paused) {
+            bbg.drawString("PAUSED", this.WIDTH / 2 - 10, 15);
+        } else {
+            bbg.drawString("SCORE", this.WIDTH / 2 - 10, 15);
+            bbg.drawString(Integer.toString(score1), this.WIDTH / 2 - 20, 30);
+            bbg.drawString(Integer.toString(score2), this.WIDTH / 2 + 40, 30);
+        }
 
         /* Draw paddles and ball. */
         p1.draw(bbg);
@@ -171,14 +176,16 @@ public class Pong extends JFrame {
     void moveBall() {
         /* Calculate the y axis difference of paddle 1 (y) and ball. */
         int difference = Math.abs((ballY + 5) - (p1.getY() + 25));
-        
+
         /* Change direction of ball if hitting the paddle. */
         if (ballX == p1.getX() + 5 && difference <= 25) {
             this.toLeft = false;
-            /* Adjust the vertical speed of the ball. Formula is difference / 5
-                So when hitting the top half of paddle, the ball starts moving up. */
+            /*
+             * Adjust the vertical speed of the ball. Formula is difference / 5 So when
+             * hitting the top half of paddle, the ball starts moving up.
+             */
             speed = ((ballY + 5) - (p1.getY() + 25)) / 5;
-        } else if (ballX == p2.getX() - 5 && (Math.abs((ballY + 5) - (p2.getY() + 25)) <= 25)){
+        } else if (ballX == p2.getX() - 5 && (Math.abs((ballY + 5) - (p2.getY() + 25)) <= 25)) {
             this.toLeft = true;
             speed = ((ballY + 5) - (p2.getY() + 25)) / 5;
         }
@@ -188,7 +195,7 @@ public class Pong extends JFrame {
         } else {
             ballX += 5;
         }
-        
+
         /* Change direction of ball if hitting the top or bottom */
         if (ballY <= 0 || ballY >= this.HEIGHT - 10) {
             speed = -speed;

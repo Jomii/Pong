@@ -16,8 +16,6 @@ public class AI {
         this.ballY = y;
     }
 
-    /* TODO: Fix jitter when moving the paddle.
-            - Fix ai going beyond bottom border. */
     public int movePaddle(int y) {
         if (ballX >= vision) {
 

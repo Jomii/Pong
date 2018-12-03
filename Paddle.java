@@ -14,7 +14,7 @@ public class Paddle {
 
     public void move(int value) {
         /* Only move the paddle when it would still remain inside the games borders. */
-        if (y + value > 0 && y + value < height && y - value < height) {
+        if (y + 50 + value < height && y + value > 0 && y - value < height) {
             y += value;
         }
     }
