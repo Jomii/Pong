@@ -19,6 +19,11 @@ public class Paddle {
         }
     }
 
+    /* Return paddle to the center. */
+    public void reset() {
+        this.y = height / 2 - 25;
+    }
+
     public int getX() {
         return x;
     }
